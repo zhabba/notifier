@@ -1,4 +1,4 @@
-package com.xzha.push.config;
+package com.xzha.push.application;
 
 import com.xzha.push.PushAPI;
 

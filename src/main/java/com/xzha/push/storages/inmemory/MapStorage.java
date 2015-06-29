@@ -5,6 +5,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by zhabba on 28.06.15.
+ * Temporary stub for debugging purposes
  */
 public class MapStorage {
     private  static volatile Map<String, String> appStorage = new ConcurrentHashMap<>();
