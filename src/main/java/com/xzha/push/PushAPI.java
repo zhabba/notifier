@@ -1,5 +1,7 @@
 package com.xzha.push;
 
+import com.xzha.push.dal.Storage;
+import com.xzha.push.gcm.GcmSender;
 import com.xzha.push.storages.inmemory.MapStorage;
 import org.apache.log4j.Logger;
 import org.json.simple.JSONObject;
@@ -19,19 +21,21 @@ import javax.ws.rs.core.UriInfo;
 public class PushAPI
 {
     private static final Logger LOG = Logger.getLogger(PushAPI.class);
-    @Context
-    private UriInfo uriInfo;
+    private static final Storage<String, String> storage = new Storage<>(new MapStorage());
 
     @Inject
-    private MapStorage storage;
+    private GcmSender gcmSender;
+    
+    @Context
+    private UriInfo uriInfo;
 
     @GET
     @Path("/get/{id}")
     @Produces(MediaType.TEXT_PLAIN)
     public Response getResponse(@PathParam("id") String id) {
         LOG.debug("Get method + param: " + id);
-        LOG.debug("Storage contains: " + storage.count());
-        return Response.ok().entity(storage.get(id).toString()).build();
+        LOG.debug("Storage contains: " + storage.readAll().size());
+        return Response.ok().entity(storage.read(id)).build();
     }
 
     @POST
@@ -41,7 +45,7 @@ public class PushAPI
         String id = String.valueOf(data.get("id"));
         String token = String.valueOf(data.get("token"));
         LOG.debug("Got register request: id = " + id + "token=" + token);
-        storage.save(id, token);
+        storage.create(id, token);
         return Response.accepted().build();
     }
 
@@ -62,6 +66,16 @@ public class PushAPI
     public Response sendNotification(JSONObject notification) {
         String id = String.valueOf(notification.get("id"));
         String token = String.valueOf(notification.get("token"));
-        return Response.accepted().build();
+        String topic = String.valueOf(notification.get("topic"));
+        String message = String.valueOf(notification.get("message"));
+        String userToken = storage.read(id);
+        String response;
+        if (userToken != null && userToken.equals(token)) {
+            response = gcmSender.send(message, topic);
+            return Response.ok().entity(response).build();
+        } else {
+            response = "Unregistered user";
+            return Response.status(401).entity(response).build();
+        }
     }
 }

@@ -1,5 +1,9 @@
 package com.xzha.push.storages.inmemory;
 
+import com.xzha.push.storages.IStorage;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -7,14 +11,14 @@ import java.util.concurrent.ConcurrentHashMap;
  * Created by zhabba on 28.06.15.
  * Temporary stub for debugging purposes
  */
-public class MapStorage {
-    private  static volatile Map<String, String> appStorage = new ConcurrentHashMap<>();
+public class MapStorage implements IStorage<String, String> {
+    private  static Map<String, String> appStorage = new ConcurrentHashMap<>();
 
-    public synchronized void save(String key, String value) {
+    public synchronized void create(String key, String value) {
         appStorage.put(key, value);
     }
 
-    public synchronized String get(String key) {
+    public synchronized String read(String key) {
         return appStorage.get(key);
     }
 
@@ -24,10 +28,12 @@ public class MapStorage {
 
     public synchronized void update(String key, String value) {
         delete(key);
-        save(key, value);
+        create(key, value);
     }
 
-    public synchronized long count () {
-        return appStorage.size();
+    public List<String> readAll() {
+        List<String> all = new ArrayList<>();
+        all.addAll(appStorage.values());
+        return all;
     }
 }

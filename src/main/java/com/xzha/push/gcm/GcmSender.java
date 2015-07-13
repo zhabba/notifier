@@ -5,8 +5,8 @@
 package com.xzha.push.gcm;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.log4j.Logger;
 import org.json.simple.JSONObject;
-
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,36 +15,23 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 public class GcmSender {
+    private static final Logger LOG = Logger.getLogger(GcmSender.class);
+    private static final String DEFAULT_TOPIC = "/topics/xzha"; //TODO:: define in config
+    public static final String API_KEY = "API_KEY"; //TODO:: define in config
 
-    public static final String API_KEY = "API_KEY";
-
-    public static void main(String[] args) {
-        if (args.length < 1 || args.length > 2 || args[0] == null) {
-            System.err.println("usage: ./gradlew run -Pargs=\"MESSAGE[,DEVICE_TOKEN]\"");
-            System.err.println("");
-            System.err.println("Specify a test message to broadcast via GCM. If a device's GCM registration token is\n" +
-                    "specified, the message will only be sent to that device. Otherwise, the message \n" +
-                    "will be sent to all devices subscribed to the \"global\" topic.");
-            System.err.println("");
-            System.err.println("Example (Broadcast):\n" +
-                    "On Windows:   .\\gradlew.bat run -Pargs=\"<Your_Message>\"\n" +
-                    "On Linux/Mac: ./gradlew run -Pargs=\"<Your_Message>\"");
-            System.err.println("");
-            System.err.println("Example (Unicast):\n" +
-                    "On Windows:   .\\gradlew.bat run -Pargs=\"<Your_Message>,<Your_Token>\"\n" +
-                    "On Linux/Mac: ./gradlew run -Pargs=\"<Your_Message>,<Your_Token>\"");
-            System.exit(1);
-        }
+    public String send(String message, String topic) {
+        LOG.debug("Sending message to GCM");
+        LOG.debug("Message body is: " + message);
         try {
             // Prepare JSON containing the GCM message content. What to send and where to send.
             JSONObject jGcmData = new JSONObject();
             JSONObject jData = new JSONObject();
-            jData.put("message", args[0].trim());
+            jData.put("message", message.trim());
             // Where to send GCM message.
-            if (args.length > 1 && args[1] != null) {
-                jGcmData.put("to", args[1].trim());
+            if (topic != null && !topic.isEmpty()) {
+                jGcmData.put("to", topic.trim());
             } else {
-                jGcmData.put("to", "/topics/xzha");
+                jGcmData.put("to", DEFAULT_TOPIC);//TODO:: define in config
             }
             // What to send in GCM message.
             jGcmData.put("data", jData);
@@ -64,15 +51,10 @@ public class GcmSender {
             // Read GCM response.
             InputStream inputStream = conn.getInputStream();
             String resp = IOUtils.toString(inputStream);
-            System.out.println(resp);
-            System.out.println("Check your device/emulator for notification or logcat for " +
-                    "confirmation of the receipt of the GCM message.");
+            return resp;
         } catch (IOException e) {
-            System.out.println("Unable to send GCM message.");
-            System.out.println("Please ensure that API_KEY has been replaced by the server " +
-                    "API key, and that the device's registration token is correct (if specified).");
-            e.printStackTrace();
+            LOG.error("Error sending message" + message + " to topic: " + topic, e);
+            return null;
         }
     }
-
 }
