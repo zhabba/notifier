@@ -1,13 +1,18 @@
 package com.xzha.push;
 
-import com.xzha.push.dal.Storage;
+import com.xzha.push.dal.DAO;
 import com.xzha.push.gcm.GcmSender;
-import com.xzha.push.storages.inmemory.MapStorage;
 import org.apache.log4j.Logger;
 import org.json.simple.JSONObject;
 
 import javax.inject.Inject;
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -21,7 +26,9 @@ import javax.ws.rs.core.UriInfo;
 public class PushAPI
 {
     private static final Logger LOG = Logger.getLogger(PushAPI.class);
-    private static final Storage<String, String> storage = new Storage<>(new MapStorage());
+
+    @Inject
+    private DAO dao;
 
     @Inject
     private GcmSender gcmSender;
@@ -34,8 +41,8 @@ public class PushAPI
     @Produces(MediaType.TEXT_PLAIN)
     public Response getResponse(@PathParam("id") String id) {
         LOG.debug("Get method + param: " + id);
-        LOG.debug("Storage contains: " + storage.readAll().size());
-        return Response.ok().entity(storage.read(id)).build();
+        LOG.debug("Storage contains: " + dao.readAll().size());
+        return Response.ok().entity(dao.read(id)).build();
     }
 
     @POST
@@ -45,7 +52,7 @@ public class PushAPI
         String id = String.valueOf(data.get("id"));
         String token = String.valueOf(data.get("token"));
         LOG.debug("Got register request: id = " + id + "token=" + token);
-        storage.create(id, token);
+        dao.create(id, token);
         return Response.accepted().build();
     }
 
@@ -56,7 +63,7 @@ public class PushAPI
         String id = String.valueOf(data.get("id"));
         String token = String.valueOf(data.get("token"));
         LOG.debug("Got update registration request: id = " + id + "token=" + token);
-        storage.update(id, token);
+        dao.update(id, token);
         return Response.accepted().build();
     }
 
@@ -68,7 +75,7 @@ public class PushAPI
         String token = String.valueOf(notification.get("token"));
         String topic = String.valueOf(notification.get("topic"));
         String message = String.valueOf(notification.get("message"));
-        String userToken = storage.read(id);
+        String userToken = dao.read(id);
         String response;
         if (userToken != null && userToken.equals(token)) {
             response = gcmSender.send(message, topic);
