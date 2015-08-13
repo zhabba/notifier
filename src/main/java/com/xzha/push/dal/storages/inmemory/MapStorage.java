@@ -1,6 +1,6 @@
-package com.xzha.push.storages.inmemory;
+package com.xzha.push.dal.storages.inmemory;
 
-import com.xzha.push.storages.IStorage;
+import com.xzha.push.dal.storages.IStorage;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +15,7 @@ public class MapStorage implements IStorage<String, String> {
     private  static Map<String, String> appStorage = new ConcurrentHashMap<>();
 
     public synchronized void create(String key, String value) {
+        System.out.println("++++");
         appStorage.put(key, value);
     }
 

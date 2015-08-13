@@ -1,6 +1,6 @@
 package com.xzha.push;
 
-import com.xzha.push.dal.DAO;
+import com.xzha.push.dal.StubDAO;
 import com.xzha.push.gcm.GcmSender;
 import org.apache.log4j.Logger;
 import org.json.simple.JSONObject;
@@ -22,13 +22,13 @@ import javax.ws.rs.core.UriInfo;
  * Hello world!
  *
  */
-@Path("/api")
+@Path("/v1")
 public class PushAPI
 {
     private static final Logger LOG = Logger.getLogger(PushAPI.class);
 
     @Inject
-    private DAO dao;
+    private StubDAO stubDao;
 
     @Inject
     private GcmSender gcmSender;
@@ -41,8 +41,8 @@ public class PushAPI
     @Produces(MediaType.TEXT_PLAIN)
     public Response getResponse(@PathParam("id") String id) {
         LOG.debug("Get method + param: " + id);
-        LOG.debug("Storage contains: " + dao.readAll().size());
-        return Response.ok().entity(dao.read(id)).build();
+        LOG.debug("Storage contains: " + stubDao.readAll().size());
+        return Response.ok().entity(stubDao.read(id)).build();
     }
 
     @POST
@@ -52,7 +52,7 @@ public class PushAPI
         String id = String.valueOf(data.get("id"));
         String token = String.valueOf(data.get("token"));
         LOG.debug("Got register request: id = " + id + "token=" + token);
-        dao.create(id, token);
+        stubDao.create(id, token);
         return Response.accepted().build();
     }
 
@@ -63,7 +63,7 @@ public class PushAPI
         String id = String.valueOf(data.get("id"));
         String token = String.valueOf(data.get("token"));
         LOG.debug("Got update registration request: id = " + id + "token=" + token);
-        dao.update(id, token);
+        stubDao.update(id, token);
         return Response.accepted().build();
     }
 
@@ -75,7 +75,7 @@ public class PushAPI
         String token = String.valueOf(notification.get("token"));
         String topic = String.valueOf(notification.get("topic"));
         String message = String.valueOf(notification.get("message"));
-        String userToken = dao.read(id);
+        String userToken = stubDao.read(id);
         String response;
         if (userToken != null && userToken.equals(token)) {
             response = gcmSender.send(message, topic);

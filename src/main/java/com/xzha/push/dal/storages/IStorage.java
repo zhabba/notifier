@@ -1,4 +1,4 @@
-package com.xzha.push.storages;
+package com.xzha.push.dal.storages;
 
 import java.util.List;
 

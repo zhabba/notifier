@@ -11,7 +11,7 @@ import java.util.Set;
 /**
  * Created by zhabba on 28.06.15.
  */
-@ApplicationPath("/push")
+@ApplicationPath("/api")
 public class ApplicationConfig extends Application {
     private final Set<Class<?>> classes;
 
